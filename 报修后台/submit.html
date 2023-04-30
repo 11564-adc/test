@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../jquery.min.js"></script>
+    <title>Document</title>
+</head>
+<body>
+    <form >
+        姓名<input type="text" name="username"><br>
+        联系方式<input type="tel" name="tel"><br>
+        时间<input type="datetime-local" name="time"><br>
+        型号<select name="xh">
+            <option value="联想">联想</option>
+            <option value="Mac">mac</option>
+        </select><br>
+        问题简要<input type="text" name="question"><br>
+        <input type="submit">  <input type="reset">
+    </form> 
+</body>
+<script>
+ $(document).ready(function() {
+      $('form').on('submit', function(event) {
+        event.preventDefault();
+        var formData = $('form').serialize();
+        $.ajax({
+          type: 'POST',
+          url: 'http://localhost:8080/login',
+          data: formData,
+          success: function(data) {
+            alert('Received: ' + data.message);
+          },
+          error: function(error) {
+            alert('Error: ' + error);
+          }
+        });
+      });
+    });
+</script>
+</html>

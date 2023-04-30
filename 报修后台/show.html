@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../jquery.min.js"></script>
+    <title>Document</title>
+    <style>
+        table {
+            border: 3px solid;
+            border-collapse: collapse;
+        }
+
+        table tr,
+        th,
+        td {
+            border: 1px solid;
+
+
+        }
+    </style>
+</head>
+
+<body>
+    <table id="your_table">
+
+    </table>
+    <button id="first">第一页</button>
+    <button id="past">上一页</button>
+    <button id="next">下一页</button>
+
+    <button id="last">最后一页</button>
+</body>
+<script>
+    //页面基本情况
+    let pageNum = 1;
+    const pageSize = 2;
+    let maxPage = 1;
+    $(function () {
+        //初始化列名
+
+        $('#your_table').append('<tr><th>' + "用户名" + '</th>' + '<th>' + "电话" + '</th>' + '<th>' + "报修时间" + '</th>' + '<th>' + "型号" + '</th>' + '<th>' + "问题" + '</th>' + '<th>' + "是否解决" + '</th>' + '<th>' + '删除' + '</th>' + '</tr>');
+        $.ajax(
+            {
+                type: 'GET',
+                url: 'http://localhost:8080/show',
+                success: function (data) {
+
+                    data.forEach(function (item) {
+                        // 创建tr元素并添加数据
+                        var tr = document.createElement('tr');
+                        tr.innerHTML = '<td>' + item.username + '</td>' + '<td>' + item.tel + '</td>' + '<td>' + item.time + '</td>' + '<td>' + item.xh + '</td>' + '<td>' + item.question + '</td>';
+
+                        // 创建复选框元素并添加到td元素中
+                        var checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        if (item.solve == '1') {
+                            checkbox.checked = true;
+
+                        } else {
+                            checkbox.checked = false;
+
+                        }
+                        var td = document.createElement('td');
+                        td.appendChild(checkbox);
+                        tr.appendChild(td);
+                        //添加删除按钮
+                        var de = document.createElement('button');
+                        de.innerHTML = '删除';
+                        var td1 = document.createElement('td');
+                        td1.appendChild(de);
+                        tr.appendChild(td1)
+                        // 将tr元素添加到表格中
+                        $('#your_table').append(tr);
+                    });
+                },
+                error: function () {
+                    alert('获取表格失败')
+                }
+            });
+        //获得总页码数量
+        $.ajax(
+            {
+                type: 'GET',
+                url: 'http://localhost:8080/getCount',
+                success: function (data) {
+                    maxPage = Math.ceil(data.total / pageSize);
+                    //console.log(maxPage)
+                },
+                error: function () {
+                    alert('获得总页码失败')
+                }
+            })
+
+    })
+
+    //重新加载表格内容
+    function loadData(pageNum) {
+
+        const start = (pageNum - 1) * pageSize; // 起始记录数
+        $.ajax({
+            type: 'POST',
+            url: 'http://localhost:8080/newdata',
+            data: {
+                Num: pageNum,
+                Size: pageSize,
+            },
+            success: function (data) {
+                $('#your_table').empty();
+                //初始化列名
+
+                $('#your_table').append('<tr><th>' + "用户名" + '</th>' + '<th>' + "电话" + '</th>' + '<th>' + "报修时间" + '</th>' + '<th>' + "型号" + '</th>' + '<th>' + "问题" + '</th>' + '<th>' + "是否解决" + '</th>' + '<th>' + '删除' + '</th>' + '</tr>');
+
+                data.forEach(function (item) {
+                    // 创建tr元素并添加数据
+                    var tr = document.createElement('tr');
+                    tr.innerHTML = '<td>' + item.username + '</td>' + '<td>' + item.tel + '</td>' + '<td>' + item.time + '</td>' + '<td>' + item.xh + '</td>' + '<td>' + item.question + '</td>';
+
+                    // 创建复选框元素并添加到td元素中
+                    var checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    if (item.solve == '1') {
+                        checkbox.checked = true;
+
+                    } else {
+                        checkbox.checked = false;
+
+                    }
+                    //添加删除按钮
+                    var de = document.createElement('button');
+                    de.innerHTML = '删除';
+                    de.value = "删除"
+                    var td = document.createElement('td');
+                    td.appendChild(checkbox);
+
+                    tr.appendChild(td);
+                    var td1 = document.createElement('td');
+                    td1.appendChild(de);
+                    tr.appendChild(td1)
+                    // 将tr元素添加到表格中
+                    $('#your_table').append(tr);
+                });
+            },
+            error: function () {
+                alert('获取表格失败')
+            }
+
+        })
+    }
+    //下一页
+    $('#next').on('click', function () {
+        if (pageNum < maxPage)
+            pageNum++;
+        //console.log(pageNum)
+        loadData(pageNum)
+
+    })
+    //上一页
+    $('#past').on('click', function () {
+        if (pageNum > 1)
+            pageNum--;
+        //console.log(pageNum)
+        loadData(pageNum)
+    })
+    //第一页
+    $('#first').on('click', function () {
+        loadData(1);
+    })
+    //最后一页
+    $('#last').on('click', function () {
+        loadData(maxPage);
+    })
+    //是否完成
+    $(document).on('click', 'input[type="checkbox"]', function (e) {
+        var solve = $(this).prop('checked');
+        console.log(solve)
+        //获得用户名
+        var username = e.target.parentNode.previousSibling.previousSibling.previousSibling.previousSibling.previousSibling.textContent;
+
+        $.ajax({
+            type: 'POST',
+            url: 'http://localhost:8080/solved',
+            data: {
+                solve: solve,
+                username: username
+            },
+            success: function (res) {
+
+
+            },
+            error: function (error) {
+                console.error(error);
+            }
+        })
+    })
+    //删除记录
+    $('#your_table').on('click', 'button', function (e) {
+        //获得用户名
+        var username = e.target.parentNode.previousSibling.previousSibling.previousSibling.previousSibling.previousSibling.previousSibling.textContent;
+
+
+        console.log(username)
+        $.ajax({
+            type: 'POST',
+            url: 'http://localhost:8080/delete',
+            data: {
+                username: username
+            },
+            success: function (res) {
+                confirm('删除成功')
+                loadData(pageNum)
+
+            },
+            error: function (error) {
+                console.error(error);
+            }
+        })
+    })
+</script>
+
+</html>
